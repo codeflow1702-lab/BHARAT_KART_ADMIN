@@ -121,35 +121,68 @@
                     const order = docSnap.data();
                     const orderId = docSnap.id;
                     
-                    // Format Items List
-                    let itemsHtml = `<ul class="item-list">`;
-                    order.items.forEach(item => {
-                        itemsHtml += `<li>• ${item.name} (₹${item.price})</li>`;
-                    });
-                    itemsHtml += `</ul>`;
+                    // Safely get shipping information
+const shipping = order.shipping || {};
 
-                    // Status Dropdown Logic
-                    const statusOptions = `
-                        <select onchange="updateStatus('${orderId}', this.value)" class="status-select">
-                            <option value="Placed" ${order.status === 'Placed' ? 'selected' : ''}>Placed</option>
-                            <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                            <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        </select>
-                    `;
+const customerName = shipping.name || "Guest Customer";
+const phone = shipping.phone || "N/A";
+const address = shipping.address || "N/A";
+const city = shipping.city || "";
+const pincode = shipping.pincode || "";
 
-                    const row = `
-                        <tr>
-                            <td><small>#${orderId.slice(0,6)}</small></td>
-                            <td>
-                                <strong>${order.shipping.name}</strong><br>
-                                <small>${order.shipping.phone}</small>
-                            </td>
-                            <td>${itemsHtml}</td>
-                            <td><strong>₹${order.amount}</strong></td>
-                            <td><small>${order.shipping.address}, ${order.shipping.city} - ${order.shipping.pincode}</small></td>
-                            <td>${statusOptions}</td>
-                        </tr>
-                    `;
+// Safely format items
+let itemsHtml = `<ul class="item-list">`;
+
+if (Array.isArray(order.items) && order.items.length > 0) {
+    order.items.forEach(item => {
+        const itemName = item?.name || "Unknown Product";
+        const itemPrice = item?.price ?? 0;
+
+        itemsHtml += `<li>• ${itemName} (₹${itemPrice})</li>`;
+    });
+} else {
+    itemsHtml += `<li>No items</li>`;
+}
+
+itemsHtml += `</ul>`;
+
+// Status Dropdown
+const currentStatus = order.status || "Placed";
+
+const statusOptions = `
+    <select onchange="updateStatus('${orderId}', this.value)" class="status-select">
+        <option value="Placed" ${currentStatus === 'Placed' ? 'selected' : ''}>Placed</option>
+        <option value="Shipped" ${currentStatus === 'Shipped' ? 'selected' : ''}>Shipped</option>
+        <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+    </select>
+`;
+
+const row = `
+    <tr>
+        <td><small>#${orderId.slice(0,6)}</small></td>
+
+        <td>
+            <strong>${customerName}</strong><br>
+            <small>${phone}</small>
+        </td>
+
+        <td>${itemsHtml}</td>
+
+        <td>
+            <strong>₹${order.amount || 0}</strong>
+        </td>
+
+        <td>
+            <small>
+                ${address}
+                ${city ? `, ${city}` : ''}
+                ${pincode ? ` - ${pincode}` : ''}
+            </small>
+        </td>
+
+        <td>${statusOptions}</td>
+    </tr>
+`;
                     tbody.innerHTML += row;
                 });
 
