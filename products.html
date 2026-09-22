@@ -410,6 +410,531 @@
             else loadProducts();
         });
 
+        onAuthStateChanged(auth, (user) => {
+    if (!user) window.location.href = "index.html";
+    else loadProducts();
+});
+
+
+/* =========================================
+   PRODUCT IMAGE MANAGER
+   ========================================= */
+
+let productImages = [];
+
+
+/* Open image modal */
+
+document.getElementById("addImageBtn").addEventListener("click", () => {
+
+    document.getElementById("imageModal").classList.add("show");
+
+});
+
+
+/* Close image modal */
+
+function closeImageModal() {
+    document.getElementById("imageModal").classList.remove("show");
+}
+
+document.getElementById("closeImageModal").addEventListener(
+    "click",
+    closeImageModal
+);
+
+document.getElementById("imageModalOverlay").addEventListener(
+    "click",
+    closeImageModal
+);
+
+
+/* =========================================
+   IMAGE URL OPTION
+   ========================================= */
+
+document.getElementById("singleUrlOption").addEventListener(
+    "click",
+    () => {
+
+        showImageUrlPanel(false);
+
+    }
+);
+
+
+/* =========================================
+   GALLERY URL OPTION
+   ========================================= */
+
+document.getElementById("galleryUrlOption").addEventListener(
+    "click",
+    () => {
+
+        showImageUrlPanel(true);
+
+    }
+);
+
+
+/* =========================================
+   SHOW URL PANEL
+   ========================================= */
+
+function showImageUrlPanel(isGallery) {
+
+    const modalBox = document.querySelector(".image-modal-box");
+
+    modalBox.innerHTML = `
+
+        <div class="image-modal-header">
+
+            <div>
+
+                <h3>
+                    ${isGallery ? "Add Gallery Images" : "Add Image URL"}
+                </h3>
+
+                <p>
+                    ${
+                        isGallery
+                        ? "Add multiple image URLs, one per line"
+                        : "Paste the URL of your product image"
+                    }
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="image-modal-close"
+                id="dynamicCloseImageModal"
+            >
+                <i class="fas fa-xmark"></i>
+            </button>
+
+        </div>
+
+
+        <div class="image-url-form">
+
+            ${
+                isGallery
+                ? `
+                    <textarea
+                        id="imageUrlInput"
+                        class="image-url-input image-url-textarea"
+                        placeholder="https://example.com/image1.jpg
+https://example.com/image2.jpg
+https://example.com/image3.jpg"
+                    ></textarea>
+
+                    <small class="image-input-help">
+                        Add one image URL per line
+                    </small>
+                `
+                : `
+                    <input
+                        type="url"
+                        id="imageUrlInput"
+                        class="image-url-input"
+                        placeholder="https://example.com/product.jpg"
+                    >
+
+                    <small class="image-input-help">
+                        Use a direct image URL ending in .jpg, .png, .webp, etc.
+                    </small>
+                `
+            }
+
+        </div>
+
+
+        <div class="image-modal-actions">
+
+            <button
+                type="button"
+                class="image-back-btn"
+                id="imageBackBtn"
+            >
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </button>
+
+            <button
+                type="button"
+                class="image-add-confirm-btn"
+                id="confirmImageBtn"
+            >
+                <i class="fas fa-plus"></i>
+                Add Image${isGallery ? "s" : ""}
+            </button>
+
+        </div>
+
+    `;
+
+
+    /* Close */
+
+    document
+        .getElementById("dynamicCloseImageModal")
+        .addEventListener("click", closeImageModal);
+
+
+    /* Back */
+
+    document
+        .getElementById("imageBackBtn")
+        .addEventListener("click", () => {
+
+            showImageOptions();
+
+        });
+
+
+    /* Add */
+
+    document
+        .getElementById("confirmImageBtn")
+        .addEventListener("click", () => {
+
+            addImageUrls(isGallery);
+
+        });
+
+}
+
+
+/* =========================================
+   SHOW OPTIONS AGAIN
+   ========================================= */
+
+function showImageOptions() {
+
+    const modalBox = document.querySelector(".image-modal-box");
+
+    modalBox.innerHTML = `
+
+        <div class="image-modal-header">
+
+            <div>
+
+                <h3>Add Product Image</h3>
+
+                <p>Choose how you want to add an image</p>
+
+            </div>
+
+            <button
+                type="button"
+                class="image-modal-close"
+                id="dynamicCloseImageModal"
+            >
+                <i class="fas fa-xmark"></i>
+            </button>
+
+        </div>
+
+
+        <div class="image-options">
+
+            <button
+                type="button"
+                class="image-option"
+                id="dynamicSingleUrlOption"
+            >
+
+                <div class="image-option-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+
+                <div class="image-option-text">
+                    <strong>Image URL</strong>
+                    <span>Add one image using a URL</span>
+                </div>
+
+                <i class="fas fa-chevron-right image-option-arrow"></i>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="image-option"
+                id="dynamicGalleryUrlOption"
+            >
+
+                <div class="image-option-icon">
+                    <i class="fas fa-images"></i>
+                </div>
+
+                <div class="image-option-text">
+                    <strong>Gallery Images</strong>
+                    <span>Add multiple image URLs</span>
+                </div>
+
+                <i class="fas fa-chevron-right image-option-arrow"></i>
+
+            </button>
+
+        </div>
+
+    `;
+
+
+    document
+        .getElementById("dynamicCloseImageModal")
+        .addEventListener("click", closeImageModal);
+
+
+    document
+        .getElementById("dynamicSingleUrlOption")
+        .addEventListener("click", () => {
+
+            showImageUrlPanel(false);
+
+        });
+
+
+    document
+        .getElementById("dynamicGalleryUrlOption")
+        .addEventListener("click", () => {
+
+            showImageUrlPanel(true);
+
+        });
+
+}
+
+
+/* =========================================
+   ADD IMAGE URLS
+   ========================================= */
+
+function addImageUrls(isGallery) {
+
+    const input = document.getElementById("imageUrlInput");
+
+    if (!input) return;
+
+    let urls = [];
+
+    if (isGallery) {
+
+        urls = input.value
+            .split("\n")
+            .map(url => url.trim())
+            .filter(url => url !== "");
+
+    } else {
+
+        const url = input.value.trim();
+
+        if (url) {
+            urls.push(url);
+        }
+
+    }
+
+
+    if (urls.length === 0) {
+
+        alert("Please enter at least one image URL.");
+
+        return;
+
+    }
+
+
+    /* Add images */
+
+    urls.forEach(url => {
+
+        if (!productImages.includes(url)) {
+
+            productImages.push(url);
+
+        }
+
+    });
+
+
+    updateImageFields();
+
+    renderImageGallery();
+
+    closeImageModal();
+
+}
+
+
+/* =========================================
+   RENDER IMAGE GALLERY
+   ========================================= */
+
+function renderImageGallery() {
+
+    const gallery = document.getElementById("imageGallery");
+
+    const empty = document.getElementById("emptyGallery");
+
+
+    if (!gallery) return;
+
+
+    if (productImages.length === 0) {
+
+        gallery.innerHTML = `
+
+            <div class="empty-gallery" id="emptyGallery">
+
+                <i class="fas fa-images"></i>
+
+                <span>No images added</span>
+
+                <small>Add an image URL to get started</small>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    gallery.innerHTML = "";
+
+
+    productImages.forEach((url, index) => {
+
+        const item = document.createElement("div");
+
+        item.className = "image-item";
+
+
+        item.innerHTML = `
+
+            <img
+                src="${url}"
+                onerror="this.style.opacity='0.25'"
+            >
+
+
+            ${
+                index === 0
+                ? `
+                    <div class="image-main-badge">
+                        <i class="fas fa-star"></i>
+                        Main Image
+                    </div>
+                `
+                : `
+                    <button
+                        type="button"
+                        class="set-main-btn"
+                        data-index="${index}"
+                    >
+                        Set Main
+                    </button>
+                `
+            }
+
+
+            <button
+                type="button"
+                class="remove-image-btn"
+                data-index="${index}"
+                title="Remove image"
+            >
+                <i class="fas fa-xmark"></i>
+            </button>
+
+        `;
+
+
+        gallery.appendChild(item);
+
+    });
+
+
+    /* Remove buttons */
+
+    gallery
+        .querySelectorAll(".remove-image-btn")
+        .forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                const index = Number(button.dataset.index);
+
+                productImages.splice(index, 1);
+
+                updateImageFields();
+
+                renderImageGallery();
+
+            });
+
+        });
+
+
+    /* Main image buttons */
+
+    gallery
+        .querySelectorAll(".set-main-btn")
+        .forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                const index = Number(button.dataset.index);
+
+                const selected = productImages.splice(index, 1)[0];
+
+                productImages.unshift(selected);
+
+                updateImageFields();
+
+                renderImageGallery();
+
+            });
+
+        });
+
+}
+
+
+/* =========================================
+   UPDATE HIDDEN FIELDS
+   ========================================= */
+
+function updateImageFields() {
+
+    const mainImage = productImages.length > 0
+        ? productImages[0]
+        : "";
+
+
+    document.getElementById("prodImg").value = mainImage;
+
+
+    document.getElementById("prodImages").value =
+        JSON.stringify(productImages);
+
+}
+
+
+/* =========================================
+   INITIALIZE
+   ========================================= */
+
+renderImageGallery();
+
+
+// 1. SAVE PRODUCT (ADD OR UPDATE)
+window.saveProduct = async () => {
+
         // 1. SAVE PRODUCT (ADD OR UPDATE)
         window.saveProduct = async () => {
             const id = document.getElementById('prodId').value;
