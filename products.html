@@ -1166,18 +1166,20 @@ renderImageGallery();
                 if (id) {
                     // UPDATE EXISTING
                     await updateDoc(doc(db, "products", id), {
-                        name: name,
-                        price: Number(price),
-                        image: img
-                    });
+    name: name,
+    price: Number(price),
+    image: img,
+    images: productImages
+});
                     alert("Product Updated! ✅");
                 } else {
                     // ADD NEW
                     await addDoc(collection(db, "products"), {
-                        name: name,
-                        price: Number(price),
-                        image: img
-                    });
+    name: name,
+    price: Number(price),
+    image: img,
+    images: productImages
+});
                     alert("Product Added! ✅");
                 }
                 resetForm();
