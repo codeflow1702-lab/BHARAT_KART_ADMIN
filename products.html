@@ -310,7 +310,72 @@
 
         <!-- Stores all gallery image URLs -->
         <input type="hidden" id="prodImages">
+<input type="hidden" id="prodImages">
 
+<!-- IMAGE ADD MODAL -->
+<div class="image-modal" id="imageModal">
+
+    <div class="image-modal-overlay" id="imageModalOverlay"></div>
+
+    <div class="image-modal-box">
+
+        <div class="image-modal-header">
+            <div>
+                <h3>Add Product Image</h3>
+                <p>Choose how you want to add an image</p>
+            </div>
+
+            <button
+                type="button"
+                class="image-modal-close"
+                id="closeImageModal"
+            >
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="image-options">
+
+            <button
+                type="button"
+                class="image-option"
+                id="singleUrlOption"
+            >
+                <div class="image-option-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+
+                <div class="image-option-text">
+                    <strong>Image URL</strong>
+                    <span>Add one image using a URL</span>
+                </div>
+
+                <i class="fas fa-chevron-right image-option-arrow"></i>
+            </button>
+
+            <button
+                type="button"
+                class="image-option"
+                id="galleryUrlOption"
+            >
+                <div class="image-option-icon">
+                    <i class="fas fa-images"></i>
+                </div>
+
+                <div class="image-option-text">
+                    <strong>Gallery Images</strong>
+                    <span>Add multiple image URLs</span>
+                </div>
+
+                <i class="fas fa-chevron-right image-option-arrow"></i>
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+            </div>
     </div>
             </div>
             
