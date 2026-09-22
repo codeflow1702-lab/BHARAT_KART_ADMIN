@@ -68,8 +68,37 @@
                 <input type="number" id="prodPrice" placeholder="e.g. 500">
             </div>
             <div class="form-group">
-                <label>Image URL</label>
-                <input type="text" id="prodImg" placeholder="https://...">
+    <label>Product Images</label>
+
+    <div class="image-manager">
+
+        <div class="image-manager-header">
+            <div>
+                <h3>Product Gallery</h3>
+                <p>Add multiple images for this product</p>
+            </div>
+
+            <button type="button" class="add-image-btn" id="addImageBtn">
+                <i class="fas fa-plus"></i>
+                Add Image
+            </button>
+        </div>
+
+        <div class="image-gallery" id="imageGallery">
+            <div class="empty-gallery" id="emptyGallery">
+                <i class="fas fa-images"></i>
+                <span>No images added</span>
+                <small>Add an image URL to get started</small>
+            </div>
+        </div>
+
+        <!-- Hidden field kept for the existing product system -->
+        <input type="hidden" id="prodImg">
+
+        <!-- Stores all gallery image URLs -->
+        <input type="hidden" id="prodImages">
+
+    </div>
             </div>
             
             <button class="btn add-btn" id="mainBtn" onclick="saveProduct()">+ Add Product</button>
