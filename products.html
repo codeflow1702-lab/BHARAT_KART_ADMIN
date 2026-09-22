@@ -649,43 +649,7 @@
 
 });
 
-    if (!user) {
-        window.location.href = "index.html";
-        return;
-    }
-
-    try {
-
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-            alert("DEBUG: User document not found.");
-            return;
-        }
-
-        const userData = userSnap.data();
-
-        alert(
-            "DEBUG\n\n" +
-            "Firebase UID:\n" + user.uid +
-            "\n\nRole:\n" + userData.role
-        );
-
-        loadProducts();
-
-    } catch (error) {
-
-        alert(
-            "DEBUG ERROR:\n\n" +
-            error.code +
-            "\n\n" +
-            error.message
-        );
-
-    }
-
-});
+    
 
 /* =========================================
    PRODUCT IMAGE MANAGER
