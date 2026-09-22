@@ -631,7 +631,23 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
+
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    alert(
+        "DEBUG UID:\n\n" +
+        user.uid +
+        "\n\nEmail:\n" +
+        user.email
+    );
+
+    loadProducts();
+
+});
 
     if (!user) {
         window.location.href = "index.html";
