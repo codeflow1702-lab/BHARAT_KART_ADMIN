@@ -1246,7 +1246,12 @@ renderImageGallery();
                     container.innerHTML += html;
                 });
             } catch (error) {
-                console.error(error);
+    alert(
+        "LOAD PRODUCTS ERROR:\n\n" +
+        error.code +
+        "\n\n" +
+        error.message
+    );
             }
         }
 
