@@ -39,6 +39,219 @@
         .icon-btn { width: 30px; height: 30px; border-radius: 50%; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .del-btn { background: rgba(255, 0, 0, 0.8); }
         .edit-btn { background: rgba(0, 0, 255, 0.8); }
+
+/* =========================================
+   PROFESSIONAL PRODUCT IMAGE MANAGER
+   ========================================= */
+
+.image-manager {
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 16px;
+    padding: 18px;
+    margin-top: 8px;
+}
+
+.image-manager-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.image-manager-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #222;
+}
+
+.image-manager-header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.add-image-btn {
+    border: none;
+    background: #1e1e1e;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: 0.2s ease;
+    white-space: nowrap;
+}
+
+.add-image-btn:hover {
+    transform: translateY(-1px);
+    background: #333;
+}
+
+.add-image-btn:active {
+    transform: scale(0.97);
+}
+
+/* Gallery */
+
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.empty-gallery {
+    grid-column: 1 / -1;
+    min-height: 140px;
+    border: 2px dashed #ddd;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #999;
+    background: white;
+}
+
+.empty-gallery i {
+    font-size: 30px;
+    margin-bottom: 8px;
+    color: #bbb;
+}
+
+.empty-gallery span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #777;
+}
+
+.empty-gallery small {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #aaa;
+}
+
+/* Image Card */
+
+.image-item {
+    position: relative;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #eee;
+    border: 1px solid #ddd;
+}
+
+.image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Main image badge */
+
+.image-main-badge {
+    position: absolute;
+    left: 7px;
+    bottom: 7px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 4px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Remove button */
+
+.remove-image-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 27px;
+    height: 27px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #e53935;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: 0.2s ease;
+}
+
+.remove-image-btn:hover {
+    background: #e53935;
+    color: white;
+    transform: scale(1.08);
+}
+
+/* Set main image button */
+
+.set-main-btn {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    border: none;
+    background: rgba(255,255,255,0.92);
+    color: #555;
+    padding: 5px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.set-main-btn:hover {
+    background: #1e1e1e;
+    color: white;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .image-manager {
+        padding: 14px;
+    }
+
+    .image-manager-header {
+        align-items: flex-start;
+    }
+
+    .image-manager-header h3 {
+        font-size: 15px;
+    }
+
+    .add-image-btn {
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+
+    .image-gallery {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .image-item {
+        height: 95px;
+    }
+
+    .empty-gallery {
+        min-height: 120px;
+    }
+                   }
+        
     </style>
 </head>
 <body>
