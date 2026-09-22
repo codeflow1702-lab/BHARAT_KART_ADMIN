@@ -1227,16 +1227,29 @@ renderImageGallery();
         }
 
         // 3. EDIT MODE
-        window.editProduct = (id, name, price, img) => {
-            document.getElementById('prodId').value = id;
-            document.getElementById('prodName').value = name;
-            document.getElementById('prodPrice').value = price;
-            document.getElementById('prodImg').value = img;
+        window.editProduct = async (id, name, price, img) => {
+    document.getElementById('prodId').value = id;
+    document.getElementById('prodName').value = name;
+    document.getElementById('prodPrice').value = price;
 
-            document.getElementById('mainBtn').innerText = "Update Product";
-            document.getElementById('mainBtn').style.background = "orange";
-            document.getElementById('cancelBtn').style.display = "block";
-        };
+    const productDoc = await getDocs(collection(db, "products"));
+    const found = productDoc.docs.find(d => d.id === id);
+
+    if (found) {
+        const data = found.data();
+
+        productImages = Array.isArray(data.images)
+            ? [...data.images]
+            : (data.image ? [data.image] : []);
+
+        updateImageFields();
+        renderImageGallery();
+    }
+
+    document.getElementById('mainBtn').innerText = "Update Product";
+    document.getElementById('mainBtn').style.background = "orange";
+    document.getElementById('cancelBtn').style.display = "block";
+};
 
         // 4. RESET FORM
         window.resetForm = () => {
