@@ -410,12 +410,6 @@
             else loadProducts();
         });
 
-        onAuthStateChanged(auth, (user) => {
-    if (!user) window.location.href = "index.html";
-    else loadProducts();
-});
-
-
 /* =========================================
    PRODUCT IMAGE MANAGER
    ========================================= */
@@ -931,9 +925,6 @@ function updateImageFields() {
 
 renderImageGallery();
 
-
-// 1. SAVE PRODUCT (ADD OR UPDATE)
-window.saveProduct = async () => {
 
         // 1. SAVE PRODUCT (ADD OR UPDATE)
         window.saveProduct = async () => {
