@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BharatKart Admin | Orders</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --sidebar: #1e293b; --bg: #f1f5f9; --blue: #3b82f6; }
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Inter', sans-serif; background: var(--bg); }
+
+        /* Sidebar (Same as Dashboard) */
+        .sidebar { width: 260px; background: var(--sidebar); color: white; padding: 25px; display: flex; flex-direction: column; }
+        .brand { font-size: 20px; font-weight: 800; margin-bottom: 40px; color: white; }
+        .brand span { color: var(--blue); }
+        .menu-item { padding: 15px; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 15px; border-radius: 8px; transition: 0.3s; margin-bottom: 5px; text-decoration: none; }
+        .menu-item:hover, .menu-item.active { background: #334155; color: white; }
+        .logout { margin-top: auto; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        /* Content */
+        .content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { color: #1e293b; }
+
+        /* ORDER SEARCH + FILTERS */
+        .order-tools {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .search-box input:focus {
+            border-color: #3b82f6;
+        }
+
+        .clear-search {
+            padding: 11px 16px;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .result-count {
+            margin-top: 10px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .coupon-badge {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .no-coupon {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .discount-text {
+            color: #15803d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* ORDERS TABLE */
+        .orders-table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .orders-table th { background: #f8fafc; text-align: left; padding: 15px; color: #64748b; font-size: 13px; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
+        .orders-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; color: #334155; font-size: 14px; vertical-align: top; }
+        .orders-table tr:last-child td { border-bottom: none; }
+
+        /* Status Badges */
+        .status-select { padding: 5px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .status-placed { color: #d97706; border-color: #d97706; }
+        .status-shipped { color: #2563eb; border-color: #2563eb; }
+        .status-delivered { color: #16a34a; border-color: #16a34a; }
+
+        .item-list { list-style: none; padding: 0; margin: 0; font-size: 13px; color: #64748b; }
+        .item-list li { margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand">BharatKart <span>Admin</span></div>
+        <a href="dashboard.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <a href="products.html" class="menu-item"><i class="fa-solid fa-box"></i> Products</a>
+        <a href="orders.html" class="menu-item active"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+        <a href="customers.html" class="menu-item"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="coupons.html" class="menu-item"><i class="fa-solid fa-ticket"></i> Coupons</a>
+        <button class="logout" id="logoutBtn">Logout</button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+        <div class="header">
+            <h1>Order Management</h1>
+            <button onclick="fetchOrders()" style="padding: 8px 15px; background: white; border: 1px solid #ccc; cursor: pointer; border-radius: 5px;">Refresh <i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+
+        <div class="order-tools">
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="search"
+                        id="orderSearch"
+                        placeholder="Search by Order ID..."
+                        autocomplete="off"
+                        oninput="filterOrders()"
+                    >
+                </div>
+                <button class="clear-search" type="button" onclick="clearOrderSearch()">
+                    Clear
+                </button>
+            </div>
+            <div id="resultCount" class="result-count">Loading orders...</div>
+        </div>
+
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Amount</th>
+                    <th>Coupon</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="ordersBody">
+                <tr><td colspan="7" style="text-align:center;">Loading orders...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLCNAA-bbUo2EQfp1EDfGE76b8iSQmCTI",
+            authDomain: "bharat-c734b.firebaseapp.com",
+            projectId: "bharat-c734b",
+            appId: "1:273763763790:web:b2499eff81a4b5b5c3651f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let allOrders = [];
+
+        // 1. AUTH CHECK
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            } else {
+                fetchOrders();
+            }
+        });
+
+        // 2. FETCH ALL ORDERS
+        window.fetchOrders = async () => {
+            const tbody = document.getElementById("ordersBody");
+            const count = document.getElementById("resultCount");
+
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
+            count.innerText = "Loading orders...";
+
+            try {
+                const q = query(collection(db, "orders"));
+                const querySnapshot = await getDocs(q);
+
+                allOrders = [];
+
+                querySnapshot.forEach((docSnap) => {
+                    allOrders.push({
+                        firebaseId: docSnap.id,
+                        data: docSnap.data()
+                    });
+                });
+
+                // Newest first when createdAt exists.
+                allOrders.sort((a, b) => {
+                    const aTime = a.data.createdAt?.toMillis ? a.data.createdAt.toMillis() : 0;
+                    const bTime = b.data.createdAt?.toMillis ? b.data.createdAt.toMillis() : 0;
+                    return bTime - aTime;
+                });
+
+                renderOrders(allOrders);
+
+            } catch (error) {
+                console.error("Error:", error);
+                tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Error loading orders: ${escapeHtml(error.message)}</td></tr>`;
+                count.innerText = "Could not load orders.";
+            }
+        };
+
+        // 3. RENDER ORDERS
+        function renderOrders(orders) {
+            const tbody = document.getElementById("ordersBody");
+            const count = document.getElementById("resultCount");
+
+            if (!orders.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No matching orders found.</td></tr>';
+                count.innerText = "0 orders found";
+                return;
+            }
+
+            tbody.innerHTML = "";
+
+            orders.forEach(({ firebaseId, data: order }) => {
+                const shipping = order.shipping || {};
+
+                const customerName = shipping.name || "Guest Customer";
+                const phone = shipping.phone || "N/A";
+                const address = shipping.address || "N/A";
+                const city = shipping.city || "";
+                const pincode = shipping.pincode || "";
+
+                // Supports the existing Firebase ID and also supports
+                // a separate human-friendly order ID if your order data has one.
+                const orderId =
+                    order.orderId ||
+                    order.orderNumber ||
+                    order.orderID ||
+                    firebaseId;
+
+                // Items
+                let itemsHtml = `<ul class="item-list">`;
+
+                if (Array.isArray(order.items) && order.items.length > 0) {
+                    order.items.forEach(item => {
+                        const itemName = escapeHtml(item?.name || "Unknown Product");
+                        const itemPrice = Number(item?.price) || 0;
+                        const itemQuantity = Number(item?.quantity) || 1;
+
+                        itemsHtml += `<li>• ${itemName} × ${itemQuantity} (₹${itemPrice})</li>`;
+                    });
+                } else {
+                    itemsHtml += `<li>No items</li>`;
+                }
+
+                itemsHtml += `</ul>`;
+
+                // Coupon information saved by Stage 1 checkout.
+                const couponCode = String(order.couponCode || "").trim();
+                const discount = Number(order.discount) || 0;
+
+                let couponHtml;
+
+                if (couponCode) {
+                    couponHtml = `
+                        <span class="coupon-badge">
+                            <i class="fa-solid fa-ticket"></i> ${escapeHtml(couponCode)}
+                        </span>
+                        <br>
+                        <span class="discount-text">
+                            Discount: -₹${discount}
+                        </span>
+                    `;
+                } else {
+                    couponHtml = `<span class="no-coupon">No coupon</span>`;
+                }
+
+                // Status dropdown
+                const currentStatus = order.status || "Placed";
+
+                const statusOptions = `
+                    <select
+                        onchange="updateStatus('${firebaseId}', this.value)"
+                        class="status-select"
+                    >
+                        <option value="Placed" ${currentStatus === 'Placed' ? 'selected' : ''}>Placed</option>
+                        <option value="Shipped" ${currentStatus === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                `;
+
+                const row = `
+                    <tr>
+                        <td>
+                            <strong>${escapeHtml(String(orderId))}</strong>
+                            <br>
+                            <small style="color:#94a3b8;">#${escapeHtml(firebaseId.slice(0, 6))}</small>
+                        </td>
+
+                        <td>
+                            <strong>${escapeHtml(customerName)}</strong><br>
+                            <small>${escapeHtml(phone)}</small>
+                        </td>
+
+                        <td>${itemsHtml}</td>
+
+                        <td>
+                            <strong>₹${Number(order.amount) || 0}</strong>
+                        </td>
+
+                        <td>${couponHtml}</td>
+
+                        <td>
+                            <small>
+                                ${escapeHtml(address)}
+                                ${city ? `, ${escapeHtml(city)}` : ''}
+                                ${pincode ? ` - ${escapeHtml(pincode)}` : ''}
+                            </small>
+                        </td>
+
+                        <td>${statusOptions}</td>
+                    </tr>
+                `;
+
+                tbody.innerHTML += row;
+            });
+
+            count.innerText = `${orders.length} order${orders.length === 1 ? "" : "s"} found`;
+        }
+
+        // 4. SEARCH BY ORDER ID
+        window.filterOrders = () => {
+            const search = document
+                .getElementById("orderSearch")
+                .value
+                .trim()
+                .toLowerCase();
+
+            if (!search) {
+                renderOrders(allOrders);
+                return;
+            }
+
+            const filtered = allOrders.filter(({ firebaseId, data }) => {
+                const orderId = String(
+                    data.orderId ||
+                    data.orderNumber ||
+                    data.orderID ||
+                    firebaseId
+                ).toLowerCase();
+
+                // Search supports the full order ID and partial ID.
+                return orderId.includes(search) ||
+                       firebaseId.toLowerCase().includes(search);
+            });
+
+            renderOrders(filtered);
+        };
+
+        // 5. CLEAR SEARCH
+        window.clearOrderSearch = () => {
+            document.getElementById("orderSearch").value = "";
+            renderOrders(allOrders);
+        };
+
+        // 6. UPDATE STATUS
+        window.updateStatus = async (firebaseId, newStatus) => {
+            try {
+                const orderRef = doc(db, "orders", firebaseId);
+
+                await updateDoc(orderRef, {
+                    status: newStatus
+                });
+
+                const matching = allOrders.find(order => order.firebaseId === firebaseId);
+                if (matching) {
+                    matching.data.status = newStatus;
+                }
+
+                alert(`Order updated to ${newStatus} ✅`);
+            } catch (error) {
+                alert("Error updating status: " + error.message);
+            }
+        };
+
+        // Prevent order/customer/product text from being inserted as HTML.
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+</body>
+</html>
