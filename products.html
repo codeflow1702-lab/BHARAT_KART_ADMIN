@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BharatKart Admin | Products</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --sidebar: #1e293b; --bg: #f1f5f9; --blue: #3b82f6; }
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Inter', sans-serif; background: var(--bg); }
+
+        .sidebar { width: 260px; background: var(--sidebar); color: white; padding: 25px; display: flex; flex-direction: column; }
+        .brand { font-size: 20px; font-weight: 800; margin-bottom: 40px; color: white; }
+        .menu-item { padding: 15px; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 15px; border-radius: 8px; transition: 0.3s; margin-bottom: 5px; text-decoration: none; }
+        .menu-item:hover, .menu-item.active { background: #334155; color: white; }
+        .logout { margin-top: auto; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        .content { flex: 1; padding: 40px; overflow-y: auto; }
+        
+        /* Form */
+        .add-product-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 15px; align-items: end; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #64748b; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        
+        .btn { color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; height: 40px; }
+        .add-btn { background: var(--blue); }
+        .cancel-btn { background: #64748b; display: none; } /* Hidden by default */
+
+        /* Grid */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
+        .product-img { width: 100%; height: 150px; object-fit: cover; background: #eee; }
+        .product-info { padding: 15px; }
+        
+        /* Action Buttons */
+        .actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
+        .icon-btn { width: 30px; height: 30px; border-radius: 50%; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .del-btn { background: rgba(255, 0, 0, 0.8); }
+        .edit-btn { background: rgba(0, 0, 255, 0.8); }
+
+    </style>
+<link rel="stylesheet" href="../../assets/bharatkart-ui.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">BharatKart <span>Admin</span></div>
+        <a href="dashboard.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <a href="products.html" class="menu-item active"><i class="fa-solid fa-box"></i> Products</a>
+        <a href="orders.html" class="menu-item"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+        <a href="customers.html" class="menu-item"><i class="fa-solid fa-users"></i> Customers</a>
+<a href="coupons.html" class="menu-item"><i class="fa-solid fa-ticket"></i> Coupons</a>
+        <button class="logout" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="content">
+        <h1>Product Management</h1>
+
+        <!-- FORM -->
+        <div class="add-product-card">
+            <input type="hidden" id="prodId"> <!-- Hidden ID for editing -->
+            
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="prodName" placeholder="e.g. Aloe Vera">
+            </div>
+            <div class="form-group">
+                <label>Price (₹)</label>
+                <input type="number" id="prodPrice" placeholder="e.g. 500">
+            </div>
+            <div class="form-group">
+                <label>Product Image URL</label>
+                <input type="url" id="prodImg" placeholder="https://example.com/product-image.jpg">
+            </div>
+
+            <button class="btn add-btn" id="mainBtn" onclick="saveProduct()">+ Add Product</button>
+            <button class="btn cancel-btn" id="cancelBtn" onclick="resetForm()">Cancel</button>
+        </div>
+
+        <!-- LIST -->
+        <div class="product-grid" id="productContainer">
+            <p>Loading products...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLCNAA-bbUo2EQfp1EDfGE76b8iSQmCTI",
+            authDomain: "bharat-c734b.firebaseapp.com",
+            projectId: "bharat-c734b",
+            appId: "1:273763763790:web:b2499eff81a4b5b5c3651f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = "index.html";
+            else loadProducts();
+        });
+
+        // 1. SAVE PRODUCT (ADD OR UPDATE)
+        window.saveProduct = async () => {
+            const id = document.getElementById('prodId').value;
+            const name = document.getElementById('prodName').value;
+            const price = document.getElementById('prodPrice').value;
+            const img = document.getElementById('prodImg').value;
+
+            if(!name || !price || !img) { alert("Please fill all fields"); return; }
+
+            try {
+                if (id) {
+                    // UPDATE EXISTING
+                    await updateDoc(doc(db, "products", id), {
+                        name: name,
+                        price: Number(price),
+                        image: img
+                    });
+                    alert("Product Updated! ✅");
+                } else {
+                    // ADD NEW
+                    await addDoc(collection(db, "products"), {
+                        name: name,
+                        price: Number(price),
+                        image: img
+                    });
+                    alert("Product Added! ✅");
+                }
+                resetForm();
+                loadProducts();
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        // 2. LOAD PRODUCTS
+        async function loadProducts() {
+            const container = document.getElementById('productContainer');
+            container.innerHTML = "Loading...";
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, "products"));
+                container.innerHTML = "";
+
+                if(querySnapshot.empty) {
+                    container.innerHTML = "<p>No products found.</p>";
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const prod = doc.data();
+                    // Note: Passing data to edit function carefully
+                    const html = `
+                        <div class="product-card">
+                            <div class="actions">
+                                <button class="icon-btn edit-btn" onclick="editProduct('${doc.id}', '${prod.name}', '${prod.price}', '${prod.image}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="icon-btn del-btn" onclick="deleteProduct('${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <img src="${prod.image}" class="product-img" onerror="this.src='https://via.placeholder.com/150'">
+                            <div class="product-info">
+                                <h4>${prod.name}</h4>
+                                <p>₹ ${prod.price}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // 3. EDIT MODE
+        window.editProduct = (id, name, price, img) => {
+            document.getElementById('prodId').value = id;
+            document.getElementById('prodName').value = name;
+            document.getElementById('prodPrice').value = price;
+            document.getElementById('prodImg').value = img;
+
+            document.getElementById('mainBtn').innerText = "Update Product";
+            document.getElementById('mainBtn').style.background = "orange";
+            document.getElementById('cancelBtn').style.display = "block";
+        };
+
+        // 4. RESET FORM
+        window.resetForm = () => {
+            document.getElementById('prodId').value = "";
+            document.getElementById('prodName').value = "";
+            document.getElementById('prodPrice').value = "";
+            document.getElementById('prodImg').value = "";
+
+            document.getElementById('mainBtn').innerText = "+ Add Product";
+            document.getElementById('mainBtn').style.background = "#3b82f6";
+            document.getElementById('cancelBtn').style.display = "none";
+        };
+
+        // 5. DELETE
+        window.deleteProduct = async (id) => {
+            const ok = await BK.confirm("This product will be permanently removed from your catalog.", {title:"Delete product?", confirm:"Delete product", cancel:"Keep product", danger:true});
+            if(!ok) return;
+            try { await deleteDoc(doc(db, "products", id)); BK.toast("Product deleted successfully.", "success"); loadProducts(); }
+            catch(error){ BK.toast(error.message, "error", "Delete failed"); }
+        };
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+<script src="../../assets/bharatkart-ui.js"></script>
+</body>
+</html>
