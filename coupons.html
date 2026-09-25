@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BharatKart Admin | Coupons</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--sidebar:#1e293b;--bg:#f1f5f9;--blue:#3b82f6}
+*{box-sizing:border-box}
+body{margin:0;display:flex;min-height:100vh;font-family:Inter,sans-serif;background:var(--bg);color:#1e293b}
+.sidebar{width:260px;min-width:260px;background:var(--sidebar);color:#fff;padding:25px;display:flex;flex-direction:column}
+.brand{font-size:20px;font-weight:800;margin-bottom:40px}.brand span{color:var(--blue)}
+.menu-item{padding:15px;color:#94a3b8;display:flex;align-items:center;gap:15px;border-radius:8px;transition:.3s;margin-bottom:5px;text-decoration:none}
+.menu-item:hover,.menu-item.active{background:#334155;color:#fff}
+.logout{margin-top:auto;background:#ef4444;color:#fff;border:0;padding:12px;border-radius:8px;cursor:pointer;font-weight:600}
+.content{flex:1;padding:40px;overflow-y:auto}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.header h1{margin:0}.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.05);margin-bottom:25px}
+.form-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:end}
+label{display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px}
+input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px;outline:0;font:inherit}
+input:focus,select:focus{border-color:var(--blue)}
+.btn{border:0;border-radius:7px;padding:10px 14px;cursor:pointer;font-weight:700}
+.primary{background:var(--blue);color:#fff}.secondary{background:#64748b;color:#fff}.danger{background:#fee2e2;color:#b91c1c}.success{background:#dcfce7;color:#15803d}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}
+th{background:#f8fafc;text-align:left;padding:13px;color:#64748b;font-size:12px;border-bottom:1px solid #e2e8f0}
+td{padding:13px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle}
+.code{font-weight:800;letter-spacing:.5px}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.active-badge{background:#dcfce7;color:#15803d}.inactive-badge{background:#e2e8f0;color:#475569}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.hint{color:#64748b;font-size:12px;margin-top:8px}
+@media(max-width:1000px){.form-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.sidebar{width:190px;min-width:190px;padding:15px}.content{padding:20px}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<div class="brand">BharatKart <span>Admin</span></div>
+<a href="dashboard.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+<a href="products.html" class="menu-item"><i class="fa-solid fa-box"></i> Products</a>
+<a href="orders.html" class="menu-item"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+<a href="customers.html" class="menu-item"><i class="fa-solid fa-users"></i> Customers</a>
+<a href="coupons.html" class="menu-item active"><i class="fa-solid fa-ticket"></i> Coupons</a>
+<button class="logout" id="logoutBtn">Logout</button>
+</div>
+
+<div class="content">
+<div class="header"><h1>Coupon Management</h1><button class="btn secondary" onclick="loadCoupons()">Refresh</button></div>
+
+<div class="card">
+<h3 id="formTitle">Create Coupon</h3>
+<div class="form-grid">
+<div><label>Coupon Code</label><input id="couponCode" maxlength="30" placeholder="BHARAT10"></div>
+<div><label>Discount Type</label><select id="couponType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed (₹)</option></select></div>
+<div><label>Discount Value</label><input id="couponValue" type="number" min="0" placeholder="10"></div>
+<div><label>Minimum Order (₹)</label><input id="minOrder" type="number" min="0" value="0"></div>
+<div><label>Expiry Date</label><input id="expiryDate" type="date"></div>
+<div><button class="btn primary" id="saveBtn" onclick="saveCoupon()">+ Create Coupon</button></div>
+<div><button class="btn secondary" id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel Edit</button></div>
+</div>
+<div class="hint">Use percentage (e.g. 10 for 10%) or fixed rupees. Blank expiry means no expiry.</div>
+</div>
+
+<div class="card"><div class="table-wrap">
+<table>
+<thead><tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody id="couponBody"><tr><td colspan="6" style="text-align:center;">Loading coupons...</td></tr></tbody>
+</table>
+</div></div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {getAuth,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,getDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDLCNAA-bbUo2EQfp1EDfGE76b8iSQmCTI",authDomain:"bharat-c734b.firebaseapp.com",projectId:"bharat-c734b",appId:"1:273763763790:web:b2499eff81a4b5b5c3651f"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+let editingId=null;
+
+onAuthStateChanged(auth,async user=>{
+    if(!user){window.location.href="index.html";return;}
+    try{
+        const userSnap=await getDoc(doc(db,"users",user.uid));
+        if(!userSnap.exists()||userSnap.data().role!=="admin"){
+            alert("⛔ Access Denied");await signOut(auth);window.location.href="index.html";return;
+        }
+        loadCoupons();
+    }catch(error){console.error(error);alert("Unable to verify admin access.");}
+});
+
+window.loadCoupons=async()=>{
+    const body=document.getElementById("couponBody");
+    body.innerHTML='<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+    try{
+        const snapshot=await getDocs(collection(db,"coupons"));
+        if(snapshot.empty){body.innerHTML='<tr><td colspan="6" style="text-align:center;">No coupons yet.</td></tr>';return;}
+        body.innerHTML="";
+        snapshot.forEach(snap=>{
+            const c=snap.data(),code=String(c.code||snap.id).toUpperCase(),type=c.type==="fixed"?"₹":"%",value=Number(c.value)||0,minOrder=Number(c.minOrder)||0,expiry=c.expiryDate||"No expiry",active=c.active===true;
+            body.innerHTML+=`<tr>
+                <td class="code">${code}</td><td>${type}${value}</td><td>₹${minOrder}</td><td>${expiry}</td>
+                <td><span class="badge ${active?"active-badge":"inactive-badge"}">${active?"Active":"Inactive"}</span></td>
+                <td><div class="actions">
+                    <button class="btn ${active?"danger":"success"}" onclick="toggleCoupon('${snap.id}',${active})">${active?"Disable":"Enable"}</button>
+                    <button class="btn secondary" onclick="editCoupon('${snap.id}')">Edit</button>
+                    <button class="btn danger" onclick="removeCoupon('${snap.id}')">Delete</button>
+                </div></td>
+            </tr>`;
+        });
+    }catch(error){console.error(error);body.innerHTML=`<tr><td colspan="6" style="color:red;text-align:center;">${error.message}</td></tr>`;}
+};
+
+window.saveCoupon=async()=>{
+    const code=document.getElementById("couponCode").value.trim().toUpperCase();
+    const type=document.getElementById("couponType").value;
+    const value=Number(document.getElementById("couponValue").value);
+    const minOrder=Number(document.getElementById("minOrder").value)||0;
+    const expiryDate=document.getElementById("expiryDate").value||null;
+
+    if(!/^[A-Z0-9_-]{3,30}$/.test(code)){alert("Coupon code must be 3-30 characters using letters, numbers, _ or -.");return;}
+    if(!Number.isFinite(value)||value<=0){alert("Enter a valid discount value.");return;}
+    if(type==="percentage"&&value>100){alert("Percentage discount cannot exceed 100%.");return;}
+    if(minOrder<0){alert("Minimum order cannot be negative.");return;}
+    if(expiryDate&&new Date(expiryDate+"T23:59:59")<new Date()){alert("Expiry date cannot be in the past.");return;}
+
+    const data={code,type,value,minOrder,expiryDate,active:true};
+    try{
+        if(editingId){
+            await updateDoc(doc(db,"coupons",editingId),data);
+            alert("Coupon updated ✅");
+        }else{
+            const existing=await getDocs(collection(db,"coupons"));
+            const duplicate=existing.docs.some(d=>String(d.data().code||"").toUpperCase()===code);
+            if(duplicate){alert("A coupon with this code already exists.");return;}
+            await addDoc(collection(db,"coupons"),{...data,createdAt:serverTimestamp()});
+            alert("Coupon created ✅");
+        }
+        resetForm();loadCoupons();
+    }catch(error){console.error(error);alert("Error saving coupon: "+error.message);}
+};
+
+window.editCoupon=async id=>{
+    try{
+        const snap=await getDoc(doc(db,"coupons",id));if(!snap.exists())return;
+        const c=snap.data();editingId=id;
+        document.getElementById("formTitle").innerText="Edit Coupon";
+        document.getElementById("couponCode").value=c.code||"";
+        document.getElementById("couponType").value=c.type||"percentage";
+        document.getElementById("couponValue").value=c.value??"";
+        document.getElementById("minOrder").value=c.minOrder??0;
+        document.getElementById("expiryDate").value=c.expiryDate||"";
+        document.getElementById("saveBtn").innerText="Save Changes";
+        document.getElementById("cancelBtn").style.display="inline-block";
+        window.scrollTo({top:0,behavior:"smooth"});
+    }catch(error){alert("Error loading coupon: "+error.message);}
+};
+
+window.toggleCoupon=async(id,currentState)=>{
+    try{await updateDoc(doc(db,"coupons",id),{active:!currentState});loadCoupons();}
+    catch(error){alert("Error changing coupon status: "+error.message);}
+};
+
+window.removeCoupon=async id=>{
+    if(!confirm("Delete this coupon permanently?"))return;
+    try{await deleteDoc(doc(db,"coupons",id));if(editingId===id)resetForm();loadCoupons();}
+    catch(error){alert("Error deleting coupon: "+error.message);}
+};
+
+window.resetForm=()=>{
+    editingId=null;
+    document.getElementById("formTitle").innerText="Create Coupon";
+    document.getElementById("couponCode").value="";
+    document.getElementById("couponType").value="percentage";
+    document.getElementById("couponValue").value="";
+    document.getElementById("minOrder").value="0";
+    document.getElementById("expiryDate").value="";
+    document.getElementById("saveBtn").innerText="+ Create Coupon";
+    document.getElementById("cancelBtn").style.display="none";
+};
+
+document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth).then(()=>window.location.href="index.html"));
+</script>
+</body>
+</html>
